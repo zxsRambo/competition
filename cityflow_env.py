@@ -1,8 +1,9 @@
 import engine
 
 class CityFlowEnv():
+    ''' Simulator Environment with CityFlow
+    '''
     def __init__(self, config):
-
         self.eng = engine.Engine(1, 1, True, True, False)
         self.eng.load_roadnet(config['roadnet'])
         self.eng.load_flow(config['flow'])

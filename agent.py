@@ -2,7 +2,8 @@ import pandas as pd
 import os
 
 class FixedtimeAgent():
-
+    ''' Agent using Fixed-time algorithm to control traffic signal
+    '''
     def __init__(self, config):
         self.config = config
 
