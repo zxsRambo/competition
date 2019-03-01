@@ -34,7 +34,7 @@ Then, you can further use a pre-defined signal plan to control the traffic signa
 > python run_by_signal_plan.py
 
 ### How to implement a control algorithm
-Finally, a more complex control algorithm (SOTL[2]: Self-Organizing Trafc Light Control)is provided for your reference.
+Finally, a more complex control algorithm (SOTL[2]: Self-Organizing Trafc Light Control) is provided for your reference.
 
 > python run_by_control.py
 
