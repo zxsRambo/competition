@@ -1,45 +1,3 @@
-import pandas as pd
-import os
-
-class FixedtimeAgent():
-    ''' Agent using Fixed-time algorithm to control traffic signal
-    '''
-    def __init__(self, config):
-        self.config = config
-
-        self.current_phase_time = 1
-        self.fixed_time = 30
-        self.phase_list = config['phase_list']
-        self.phase_id = 0
-        self.phase_log = []
-        self.yellow_fixed_time = 5
-        self.yellow_start = 0
-        self.yellow_flag = False
-
-
-
-    def choose_action(self, state):
-        if self.yellow_flag:
-            if state['current_time'] - self.yellow_start >= self.yellow_fixed_time:
-                self.phase_id = (self.phase_id + 1) % len(self.phase_list)
-                self.yellow_flag = False
-            self.phase_log.append(0)
-            return 0  # 0 represents yellow signal
-        else:
-            if self.current_phase_time >= self.fixed_time:
-                self.current_phase_time = 1
-                self.yellow_start = state['current_time']
-                self.yellow_flag = True
-            else:
-                self.current_phase_time += 1
-
-            self.phase_log.append(self.phase_list[self.phase_id])
-
-            return self.phase_list[self.phase_id]
-
-    def log(self):
-        df = pd.DataFrame({'phase': self.phase_log})
-        df.to_csv(os.path.join(self.config['records_path'], 'plan.txt'), index=None)
 
 class SOTLAgent():
     ''' Agent using Fixed-time algorithm to control traffic signal
@@ -47,35 +5,24 @@ class SOTLAgent():
 
     def __init__(self, config):
         self.config = config
+        self.lane_phase_info = config['lane_phase_info']  # "intersection_1_1"
 
-        self.current_phase_time = 1
-        self.fixed_time = 30
-        self.phase_list = config['phase_list']
-        self.phase_id = 0
-        self.phase_log = []
-        self.yellow_fixed_time = 5
-        self.yellow_start = 0
-        self.yellow_flag = False
+        self.intersection_id = list(self.lane_phase_info.keys())[0]
+        self.phase_list = self.lane_phase_info[self.intersection_id]["phase"]
+        self.phase_startLane_mapping = self.lane_phase_info[self.intersection_id]["phase_startLane_mapping"]
+
+        self.phi = 20
+        self.min_green_vehicle = 20
+        self.max_red_vehicle = 30
+
+        self.action = self.phase_list[0]
 
     def choose_action(self, state):
-        if self.yellow_flag:
-            if state['current_time'] - self.yellow_start >= self.yellow_fixed_time:
-                self.phase_id = (self.phase_id + 1) % len(self.phase_list)
-                self.yellow_flag = False
-            self.phase_log.append(0)
-            return 0  # 0 represents yellow signal
-        else:
-            if self.current_phase_time >= self.fixed_time:
-                self.current_phase_time = 1
-                self.yellow_start = state['current_time']
-                self.yellow_flag = True
-            else:
-                self.current_phase_time += 1
-
-            self.phase_log.append(self.phase_list[self.phase_id])
-
-            return self.phase_list[self.phase_id]
-
-    def log(self):
-        df = pd.DataFrame({'phase': self.phase_log})
-        df.to_csv(os.path.join(self.config['records_path'], 'plan.txt'), index=None)
+        cur_phase = state["current_phase"]
+        print("Time: {}, Phase: {}".format(state['current_time'], cur_phase))
+        if state["current_phase_time"] >= self.phi:
+            num_green_vehicle = sum([state["lane_waiting_vehicle_count"][i] for i in self.phase_startLane_mapping[cur_phase]])
+            num_red_vehicle = sum([state["lane_waiting_vehicle_count"][i] for i in self.lane_phase_info[self.intersection_id]["start_lane"]]) - num_green_vehicle
+            if num_green_vehicle <= self.min_green_vehicle and num_red_vehicle > self.max_red_vehicle:
+                self.action = cur_phase % len(self.phase_list) + 1
+        return self.action

@@ -1,4 +1,6 @@
 import engine
+import pandas as pd
+import os
 
 class CityFlowEnv():
     ''' Simulator Environment with CityFlow
@@ -8,26 +10,61 @@ class CityFlowEnv():
         self.eng.load_roadnet(config['roadnet'])
         self.eng.load_flow(config['flow'])
         self.config = config
+        self.lane_phase_info = config['lane_phase_info'] # "intersection_1_1"
+
+        self.intersection_id = list(self.lane_phase_info.keys())[0]
+        self.start_lane = self.lane_phase_info[self.intersection_id]['start_lane']
+        self.phase_list = self.lane_phase_info[self.intersection_id]["phase"]
+        self.phase_startLane_mapping = self.lane_phase_info[self.intersection_id]["phase_startLane_mapping"]
+
+        self.current_phase = self.phase_list[0]
+        self.current_phase_time = 0
+        self.yellow_time = 5
+
+        self.phase_log = []
+
 
     def reset(self):
         self.eng.reset()
         return self.get_state()
 
     def step(self, action):
-        self.eng.set_tl_phase("intersection_1_1", action)
+
+        if self.current_phase != action:
+            for i in range(self.yellow_time):         # yellow light is automatically set when changing lights
+                self.eng.set_tl_phase(self.intersection_id, 0)
+                self.eng.next_step()
+                self.phase_log.append(0)
+            self.current_phase = action
+            self.current_phase_time = 1
+        else:
+            self.current_phase_time += 1
+
+        self.eng.set_tl_phase("intersection_1_1", self.current_phase)
         self.eng.next_step()
+        self.phase_log.append(self.current_phase)
         return self.get_state()
 
     def get_state(self):
         state = {}
         state['lane_vehicle_count'] = self.eng.get_lane_vehicle_count()  # {lane_id: lane_count, ...}
+        #lane_waiting_vehicle_count = self.eng.get_lane_waiting_vehicle_count()  # {lane_id: lane_waiting_count, ...}
+        #state['lane_waiting_vehicle_count'] = [lane_waiting_vehicle_count[lane] for lane in self.start_lane]
         state['lane_waiting_vehicle_count'] = self.eng.get_lane_waiting_vehicle_count()  # {lane_id: lane_waiting_count, ...}
         state['lane_vehicles'] = self.eng.get_lane_vehicles()  # {lane_id: [vehicle1_id, vehicle2_id, ...], ...}
         state['vehicle_speed'] = self.eng.get_vehicle_speed()  # {vehicle_id: vehicle_speed, ...}
         state['vehicle_distance'] = self.eng.get_vehicle_distance() # {vehicle_id: distance, ...}
         state['current_time'] = self.eng.get_current_time()
+        state['current_phase'] = self.current_phase
+        state['current_phase_time'] = self.current_phase_time
+
+
         return state
+
+
 
     def log(self):
         self.eng.print_log(self.config['replay_data_path'] + "/replay_roadnet.json",
                            self.config['replay_data_path'] + "/replay_flow.json")
+        df = pd.DataFrame({'phase': self.phase_log})
+        df.to_csv(os.path.join(self.config['records_path'], 'signal_plan.txt'), index=None)

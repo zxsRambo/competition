@@ -21,6 +21,7 @@ for step in range(num_step):
     phase = int(plan.readline())
     eng.set_tl_phase("intersection_1_1", phase)  # set traffic light of intersection_1_1 to phase (phases of intersection is defined in roadnetFile)
     eng.next_step()
+
     current_time = eng.get_current_time()                      # return a double, time past in seconds
     lane_vehicle_count = eng.get_lane_vehicle_count()                # return a dict, {lane_id: lane_count, ...}
     lane_waiting_vehicle_count = eng.get_lane_waiting_vehicle_count()        # return a dict, {lane_id: lane_waiting_count, ...}
