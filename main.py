@@ -1,6 +1,5 @@
 '''
 @time: 2019/04/27
-@licese: (C) Copyright 2019-2020, Shanghai Tianrang Intelligent Technology Corporation Limited.
 '''
 import engine
 from cityflow_env import CityFlowEnv
