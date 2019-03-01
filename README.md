@@ -19,8 +19,8 @@ Build docker image using the basic dockerFile
 
 > docker built -t docker_image_name .
 
-Please note, the /Docker/sources.list is specifically provided for competitors from China to speed up the installation, competitors from other countries
-may not need this and need modify the /Docker/dockerfile accordingly. More information about docker can be found in [here](https://docs.docker.com/get-started/)
+Please note, the /Docker/sources.list is specifically provided for competitors from China to speed up the installation, and it is not necessary for competitors from other countries. 
+More information about docker can be found in [here](https://docs.docker.com/get-started/)
 
 ## Data
 Some sample data is provided for you to run this code, which is placed in [Dropbox](https://www.dropbox.com/sh/faqz5aslun1ht9d/AAC5f0B7KuGtuejon8Y8Dgrpa?dl=0)
@@ -30,7 +30,7 @@ Some sample data is provided for you to run this code, which is placed in [Dropb
 To begin with, you can try on running the simplest code by using a default signal plan in the roadnet.
 > python run_by_default.py
 
-Then, you can further  use a pre-defined signal plan to control the traffic signal.
+Then, you can further use a pre-defined signal plan to control the traffic signal.
 > python run_by_signal_plan.py
 
 ### How to implement a control algorithm
