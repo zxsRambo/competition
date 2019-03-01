@@ -39,5 +39,5 @@ class FixedtimeAgent():
 
     def log(self):
         df = pd.DataFrame({'phase': self.phase_log})
-        df.to_csv(os.path.join(self.config['records_path'], 'signal_timing.txt'), index=None)
+        df.to_csv(os.path.join(self.config['records_path'], 'timing.txt'), index=None)
 
