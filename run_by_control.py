@@ -11,16 +11,17 @@ from agent import SOTLAgent
 
 def parse_roadnet(roadnetFile):
     roadnet = json.load(open(roadnetFile))
+    lane_phase_info_dict ={}
 
     # many intersections exist in the roadnet and virtual intersection is controlled by signal
     for intersection in roadnet["intersections"]:
         if intersection['virtual']:
             continue
-        lane_phase_info_dict = {intersection['id']: {"start_lane": [],
+        lane_phase_info_dict[intersection['id']] = {"start_lane": [],
                                                      "end_lane": [],
                                                      "phase": [],
                                                      "phase_startLane_mapping": {},
-                                                     "phase_roadLink_mapping": {}}}
+                                                     "phase_roadLink_mapping": {}}
         road_links = intersection["roadLinks"]
 
 
@@ -47,7 +48,7 @@ def parse_roadnet(roadnetFile):
             start_lane = []
             for ri in p["availableRoadLinks"]:
                 lane_pair.extend(roadLink_lane_pair[ri])
-                if roadLink_lane_pair[ri][0] not in start_lane:
+                if roadLink_lane_pair[ri][0][0] not in start_lane:
                     start_lane.append(roadLink_lane_pair[ri][0][0])
             lane_phase_info_dict[intersection['id']]["phase"].append(phase_i)
             lane_phase_info_dict[intersection['id']]["phase_startLane_mapping"][phase_i] = start_lane

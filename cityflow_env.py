@@ -31,12 +31,16 @@ class CityFlowEnv():
     def step(self, action):
 
         if self.current_phase != action:
-            for i in range(self.yellow_time):         # yellow light is automatically set when changing lights
-                self.eng.set_tl_phase(self.intersection_id, 0)
-                self.eng.next_step()
-                self.phase_log.append(0)
-            self.current_phase = action
-            self.current_phase_time = 1
+            if action == 0:
+                self.current_phase = action               # yellow light is manually set from signal plan file
+                self.current_phase_time = 1
+            else:
+                for i in range(self.yellow_time):         # yellow light is automatically set when changing lights
+                    self.eng.set_tl_phase(self.intersection_id, 0)
+                    self.eng.next_step()
+                    self.phase_log.append(0)
+                self.current_phase = action
+                self.current_phase_time = 1
         else:
             self.current_phase_time += 1
 

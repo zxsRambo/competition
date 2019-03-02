@@ -26,7 +26,7 @@ More information about docker can be found in [here](https://docs.docker.com/get
 Some sample data is provided for you to run this code, which is placed in [Dropbox](https://www.dropbox.com/sh/faqz5aslun1ht9d/AAC5f0B7KuGtuejon8Y8Dgrpa?dl=0)
 
 ## Usage
-### How to run
+### How to run by reading the traffic scenario or the traffic signal plan from the file
 To begin with, you can try on running the simplest code by using a default signal plan in the roadnet.
 > python run_by_default.py
 
