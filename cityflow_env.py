@@ -10,6 +10,7 @@ class CityFlowEnv():
         self.eng.load_roadnet(config['roadnet'])
         self.eng.load_flow(config['flow'])
         self.config = config
+        self.horizon = config['horizon']
         self.lane_phase_info = config['lane_phase_info'] # "intersection_1_1"
 
         self.intersection_id = list(self.lane_phase_info.keys())[0]
@@ -26,7 +27,7 @@ class CityFlowEnv():
 
     def reset(self):
         self.eng.reset()
-        return self.get_state()
+        return self.get_state(), self.get_reward(), self.is_done()
 
     def step(self, action):
 
@@ -47,13 +48,12 @@ class CityFlowEnv():
         self.eng.set_tl_phase("intersection_1_1", self.current_phase)
         self.eng.next_step()
         self.phase_log.append(self.current_phase)
-        return self.get_state()
+
+        return self.get_state(), self.get_reward(), self.is_done()
 
     def get_state(self):
         state = {}
         state['lane_vehicle_count'] = self.eng.get_lane_vehicle_count()  # {lane_id: lane_count, ...}
-        #lane_waiting_vehicle_count = self.eng.get_lane_waiting_vehicle_count()  # {lane_id: lane_waiting_count, ...}
-        #state['lane_waiting_vehicle_count'] = [lane_waiting_vehicle_count[lane] for lane in self.start_lane]
         state['lane_waiting_vehicle_count'] = self.eng.get_lane_waiting_vehicle_count()  # {lane_id: lane_waiting_count, ...}
         state['lane_vehicles'] = self.eng.get_lane_vehicles()  # {lane_id: [vehicle1_id, vehicle2_id, ...], ...}
         state['vehicle_speed'] = self.eng.get_vehicle_speed()  # {vehicle_id: vehicle_speed, ...}
@@ -62,10 +62,21 @@ class CityFlowEnv():
         state['current_phase'] = self.current_phase
         state['current_phase_time'] = self.current_phase_time
 
-
         return state
 
+    def get_reward(self):
+        # a sample reward function which calculates the total of waiting vehicles
+        lane_waiting_vehicle_count = self.eng.get_lane_waiting_vehicle_count()
+        reward = -1 * sum(list(lane_waiting_vehicle_count.values()))
+        return reward
 
+    def is_done(self):
+        # a sample condition to terminate this episode if number of waiting vehicle exceed the threshold.
+        lane_waiting_vehicle_count = self.eng.get_lane_waiting_vehicle_count()
+        if lane_waiting_vehicle_count >= 200:
+            return True
+        else:
+            return False
 
     def log(self):
         self.eng.print_log(self.config['replay_data_path'] + "/replay_roadnet.json",
