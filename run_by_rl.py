@@ -17,7 +17,6 @@ if __name__ == "__main__":
         'phase_list': [1, 2, 3, 4, 5, 6, 7, 8],
         'replay_data_path': 'data/frontend/web',
         'records_path': 'records',
-        'state_size': 9,
         'horizon': 3600
     }
 
@@ -26,6 +25,7 @@ if __name__ == "__main__":
     config['lane_phase_info'] = parse_roadnet(config['roadnet']) # get lane and phase information by parsing the roadnet
     intersection_id = list(config['lane_phase_info'].keys())[0]
     phase_list = config['lane_phase_info'][intersection_id]['phase']
+    config['state_size'] = len(config['lane_phase_info'][intersection_id]['start_lane']) + 1
     config['action_size'] = len(phase_list)
 
     env = CityFlowEnv(config)

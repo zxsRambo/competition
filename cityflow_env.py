@@ -30,13 +30,12 @@ class CityFlowEnv():
         return self.get_state(), self.get_reward(), self.is_done()
 
     def step(self, action):
-
         if self.current_phase != action:
-            if action == 0:
-                self.current_phase = action               # yellow light is manually set from signal plan file
+            if action == 0:                            # yellow light is manually set from signal plan file
+                self.current_phase = action
                 self.current_phase_time = 1
-            else:
-                for i in range(self.yellow_time):         # yellow light is automatically set when changing lights
+            else:                                      # yellow light is automatically set when changing lights
+                for i in range(self.yellow_time):
                     self.eng.set_tl_phase(self.intersection_id, 0)
                     self.eng.next_step()
                     self.phase_log.append(0)
@@ -48,7 +47,6 @@ class CityFlowEnv():
         self.eng.set_tl_phase("intersection_1_1", self.current_phase)
         self.eng.next_step()
         self.phase_log.append(self.current_phase)
-
         return self.get_state(), self.get_reward(), self.is_done()
 
     def get_state(self):
