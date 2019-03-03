@@ -17,7 +17,7 @@ if __name__ == "__main__":
         'phase_list': [1, 2, 3, 4, 5, 6, 7, 8],
         'replay_data_path': 'data/frontend/web',
         'records_path': 'records',
-        'state_size': 17,
+        'state_size': 9,
         'horizon': 3600
     }
 
@@ -42,13 +42,13 @@ if __name__ == "__main__":
 
     for e in range(EPISODES):
         state, reward, done = env.reset()
-        state = np.array(list(state['lane_waiting_vehicle_count'].values()) + [state['current_phase']]) # a sample state representation
+        state = np.array(list(state['start_lane_vehicle_count'].values()) + [state['current_phase']]) # a sample state representation
         state = np.reshape(state, [1, state_size])
         for time in range(HORIZON):
             action = agent.choose_action(state)
             next_state, reward, done = env.step(action)
             reward = reward if not done else -1000
-            next_state = np.array(list(next_state['lane_waiting_vehicle_count'].values()) + [next_state['current_phase']])
+            next_state = np.array(list(next_state['start_lane_vehicle_count'].values()) + [next_state['current_phase']])
             next_state = np.reshape(next_state, [1, state_size])
             agent.remember(state, action, reward, next_state, done)
             state = next_state

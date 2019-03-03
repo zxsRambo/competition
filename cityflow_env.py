@@ -54,6 +54,7 @@ class CityFlowEnv():
     def get_state(self):
         state = {}
         state['lane_vehicle_count'] = self.eng.get_lane_vehicle_count()  # {lane_id: lane_count, ...}
+        state['start_lane_vehicle_count'] = {lane: self.eng.get_lane_vehicle_count()[lane] for lane in self.start_lane}
         state['lane_waiting_vehicle_count'] = self.eng.get_lane_waiting_vehicle_count()  # {lane_id: lane_waiting_count, ...}
         state['lane_vehicles'] = self.eng.get_lane_vehicles()  # {lane_id: [vehicle1_id, vehicle2_id, ...], ...}
         state['vehicle_speed'] = self.eng.get_vehicle_speed()  # {vehicle_id: vehicle_speed, ...}
@@ -72,8 +73,8 @@ class CityFlowEnv():
 
     def is_done(self):
         # a sample condition to terminate this episode if number of waiting vehicle exceed the threshold.
-        lane_waiting_vehicle_count = self.eng.get_lane_waiting_vehicle_count()
-        if lane_waiting_vehicle_count >= 200:
+        start_lane_waiting_vehicle_count = {lane: self.eng.get_lane_waiting_vehicle_count()[lane] for lane in self.start_lane}
+        if sum(list(start_lane_waiting_vehicle_count.values())) >= 200:
             return True
         else:
             return False

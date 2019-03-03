@@ -8,6 +8,7 @@ For more description on CityFlow, see [this codebase](https://github.com/zxsRamb
 ## Dependencies
 This sample code requires the following:
 - python 3.*
+- Keras
 - more requirements in CityFlow (link needed)
 
 ## Installation
