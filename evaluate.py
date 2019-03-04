@@ -13,7 +13,10 @@ def main():
         "changeLane": False,                      # set to False if changing lane is not considered
         "num_step": 3600}
 
-    list_traffic_memo = ["uniform_200"]
+    list_traffic_memo = [
+        # "hangzhou_baochu_tiyuchang_1h_2021",
+        "uniform_200"
+    ]
 
     for memo in list_traffic_memo:
         evaluate_one_traffic(dic_sim_setting, memo)
@@ -112,10 +115,9 @@ def get_planed_entering(flowFile, dic_sim_setting):
     list_flow = json.load(open(flowFile, "r"))
     dic_traj = {}
     for flow_id, flow in enumerate(list_flow):
-        step = 0
         list_ts_this_flow = []
-        for step in range(dic_sim_setting["num_step"]):
-            if step == 0:
+        for step in range(flow["startTime"], min(flow["endTime"] + 1, dic_sim_setting["num_step"])):
+            if step == flow["startTime"]:
                 list_ts_this_flow.append(step)
             elif step - list_ts_this_flow[-1] >= flow["interval"]:
                 list_ts_this_flow.append(step)
