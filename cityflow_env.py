@@ -82,4 +82,6 @@ class CityFlowEnv():
         df = pd.DataFrame({'phase': self.phase_log[:self.horizon]})
         if not os.path.exists(self.config['records_path']):
             os.makedirs(self.config["records_path"])
-        df.to_csv(os.path.join(self.config['records_path'], 'signal_plan.txt'), index=None)
+        traffic = self.config['flow'].split('/')[-1].split(".json")[0]
+        traffic = traffic[traffic.find('_')+1:]
+        df.to_csv(os.path.join(self.config['records_path'], 'signal_plan_%s.txt' % traffic), index=None)

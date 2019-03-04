@@ -25,7 +25,7 @@ def evaluate_one_traffic(dic_sim_setting, memo):
 
     roadnetFile = "data/roadnet/roadnet_{0}.json".format(memo)
     flowFile = "data/flow/flow_{0}.json".format(memo)
-    planFile = "data/plan/signal_plan_{0}.txt".format(memo)
+    planFile = "records/signal_plan_{0}.txt".format(memo)
     outFile = "data/evaluation/evaluation_{0}.txt".format(memo)
 
     df_vehicle_actual_enter_leave = test_run(dic_sim_setting, roadnetFile, flowFile, planFile)
@@ -129,7 +129,7 @@ def get_planed_entering(flowFile, dic_sim_setting):
 
 def cal_travel_time(df_vehicle_actual_enter_leave, df_vehicle_planed_enter, outFile, dic_sim_setting):
 
-    df_res = pd.concat([df_vehicle_planed_enter, df_vehicle_actual_enter_leave], axis=1)
+    df_res = pd.concat([df_vehicle_planed_enter, df_vehicle_actual_enter_leave], axis=1, sort=False)
     assert len(df_res) == len(df_vehicle_planed_enter)
 
     df_res["leave_time"].fillna(dic_sim_setting["num_step"])
