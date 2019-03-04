@@ -44,6 +44,8 @@ class DQNAgent:
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
         self.model = self._build_model()
+        intersection_id = list(config['lane_phase_info'].keys())[0]
+        self.phase_list = config['lane_phase_info'][intersection_id]['phase']
 
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
@@ -56,6 +58,7 @@ class DQNAgent:
         return model
 
     def remember(self, state, action, reward, next_state, done):
+        action = self.phase_list.index(action)
         self.memory.append((state, action, reward, next_state, done))
 
     def choose_action(self, state):

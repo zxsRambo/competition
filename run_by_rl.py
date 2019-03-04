@@ -46,6 +46,7 @@ if __name__ == "__main__":
         state = np.reshape(state, [1, state_size])
         for time in range(HORIZON):
             action = agent.choose_action(state)
+            action = phase_list[action]
             next_state, reward, done = env.step(action)
             reward = reward if not done else -1000
             next_state = np.array(list(next_state['start_lane_vehicle_count'].values()) + [next_state['current_phase']])
