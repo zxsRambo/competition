@@ -25,11 +25,11 @@ if __name__ == "__main__":
     agent = SOTLAgent(config)
 
     # reset initially
-    state, _, _ = env.reset()
+    state, _, done = env.reset()
 
-    for step in range(3600):
+    while not done:
         action = agent.choose_action(state)
-        state, _, _ = env.step(action)
+        state, _, done = env.step(action)
 
     # log environment files
     env.log()

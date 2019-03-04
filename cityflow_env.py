@@ -70,9 +70,8 @@ class CityFlowEnv():
         return reward
 
     def is_done(self):
-        # a sample condition to terminate this episode if number of waiting vehicle exceed the threshold.
-        start_lane_waiting_vehicle_count = {lane: self.eng.get_lane_waiting_vehicle_count()[lane] for lane in self.start_lane}
-        if sum(list(start_lane_waiting_vehicle_count.values())) >= 200:
+        # judge whether running reaches horizon
+        if len(self.phase_log) >= self.horizon:
             return True
         else:
             return False
@@ -80,5 +79,7 @@ class CityFlowEnv():
     def log(self):
         self.eng.print_log(self.config['replay_data_path'] + "/replay_roadnet.json",
                            self.config['replay_data_path'] + "/replay_flow.json")
-        df = pd.DataFrame({'phase': self.phase_log})
+        df = pd.DataFrame({'phase': self.phase_log[:self.horizon]})
+        if not os.path.exist(self.config['records_path']):
+            os.makedirs(self.config["records_path"])
         df.to_csv(os.path.join(self.config['records_path'], 'signal_plan.txt'), index=None)

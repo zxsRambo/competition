@@ -44,21 +44,18 @@ if __name__ == "__main__":
         state, reward, done = env.reset()
         state = np.array(list(state['start_lane_vehicle_count'].values()) + [state['current_phase']]) # a sample state representation
         state = np.reshape(state, [1, state_size])
-        for time in range(HORIZON):
+        while not done:
             action = agent.choose_action(state)
             action = phase_list[action]
             next_state, reward, done = env.step(action)
-            reward = reward if not done else -1000
             next_state = np.array(list(next_state['start_lane_vehicle_count'].values()) + [next_state['current_phase']])
             next_state = np.reshape(next_state, [1, state_size])
             agent.remember(state, action, reward, next_state, done)
             state = next_state
-            if done:
-                break
             if len(agent.memory) > batch_size:
                 agent.replay(batch_size)
-            print("episode: {}/{}, time: {}, acton: {}, reward: {}"
-                  .format(e, EPISODES, time, action, reward))
+            print("episode: {}/{}, acton: {}, reward: {}"
+                  .format(e, EPISODES, action, reward))
         if e % 10 == 0:
             agent.save("model/trafficLight-dqn.h5")
 
