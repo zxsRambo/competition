@@ -13,7 +13,9 @@ apt-get install -y build-essential libboost-all-dev cmake
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 
-COPY ./Anaconda3-5.2.0-Linux-x86_64.sh /tmp/
+RUN apt install wget && \ 
+    wget https://repo.continuum.io/archive/Anaconda3-5.2.0-Linux-x86_64.sh -O /tmp/Anaconda3-5.2.0-Linux-x86_64.sh
+#COPY ./Anaconda3-5.2.0-Linux-x86_64.sh /tmp/
 RUN /bin/bash /tmp/Anaconda3-5.2.0-Linux-x86_64.sh -b -p /opt/conda && \
     rm /tmp/Anaconda3-5.2.0-Linux-x86_64.sh && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
