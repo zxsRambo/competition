@@ -21,3 +21,6 @@ RUN /bin/bash /tmp/Anaconda3-5.2.0-Linux-x86_64.sh -b -p /opt/conda && \
 
 # install flask
 RUN pip install -i https://mirrors.ustc.edu.cn/pypi/web/simple flask
+
+# simulator
+COPY ./engine.cpython-36m-x86_64-linux-gnu.so /opt/conda/lib/python3.6/site-packages/
