@@ -8,19 +8,19 @@ COPY ./sources.list /etc/apt/sources.list
 RUN apt update && \
 apt-get install -y build-essential libboost-all-dev cmake
 
-# install Anaconda Python 3.6
-# `Anaconda3-5.2.0-Linux-x86_64.sh` required
-ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
-ENV PATH /opt/conda/bin:$PATH
+# install Python 3.6 and its dependencies
+COPY ./requirements.txt /tmp/requirements.txt
+RUN apt-get install -y build-essential checkinstall libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev
+RUN apt-get install -y wget
+RUN cd /tmp/ && \
+    wget https://www.python.org/ftp/python/3.6.5/Python-3.6.5.tgz && \
+    tar -xvf Python-3.6.5.tgz && \
+    cd /tmp/Python-3.6.5 && \
+    ./configure && \
+    make && \
+    make install
 
-COPY ./Anaconda3-5.2.0-Linux-x86_64.sh /tmp/
-RUN /bin/bash /tmp/Anaconda3-5.2.0-Linux-x86_64.sh -b -p /opt/conda && \
-    rm /tmp/Anaconda3-5.2.0-Linux-x86_64.sh && \
-    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc
-
-# install flask
-RUN pip install -i https://mirrors.ustc.edu.cn/pypi/web/simple flask
-
-# simulator
-COPY ./engine.cpython-36m-x86_64-linux-gnu.so /opt/conda/lib/python3.6/site-packages/
+RUN pip3 install -i https://mirrors.ustc.edu.cn/pypi/web/simple -r /tmp/requirements.txt
+#
+## simulator
+COPY ./engine.cpython-36m-x86_64-linux-gnu.so /usr/local/lib/python3.6/site-packages/

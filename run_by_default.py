@@ -1,8 +1,6 @@
 import engine
 from sim_setting import sim_setting_default
 
-roadnetFile = "data/uniform_200/roadnet.json"
-flowFile = "data/uniform_200/flow.json"
 num_step = 3600
 
 eng = engine.Engine(sim_setting_default["interval"],
@@ -10,6 +8,8 @@ eng = engine.Engine(sim_setting_default["interval"],
                     sim_setting_default["saveReplay"],
                     sim_setting_default["rlTrafficLight"],
                     sim_setting_default["changeLane"])
+roadnetFile = "data/uniform_200/roadnet.json"
+flowFile = "data/uniform_200/flow.json"
 eng.load_roadnet(roadnetFile)
 eng.load_flow(flowFile)
 

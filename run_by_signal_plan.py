@@ -1,9 +1,6 @@
 import engine
 from sim_setting import sim_setting_control
 
-roadnetFile = "data/uniform_200/roadnet.json"
-flowFile = "data/uniform_200/flow.json"
-planFile = "data/uniform_200/signal_plan.txt"
 num_step = 3600
 
 eng = engine.Engine(sim_setting_control["interval"],
@@ -11,9 +8,11 @@ eng = engine.Engine(sim_setting_control["interval"],
                     sim_setting_control["saveReplay"],
                     sim_setting_control["rlTrafficLight"],
                     sim_setting_control["changeLane"])
+roadnetFile = "data/uniform_200/roadnet.json"
+flowFile = "data/uniform_200/flow.json"
+planFile = "data/uniform_200/signal_plan.txt"
 eng.load_roadnet(roadnetFile)
 eng.load_flow(flowFile)
-
 plan = open(planFile)
 plan.readline()
 
