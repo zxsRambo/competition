@@ -38,7 +38,7 @@ if __name__ == "__main__":
             for _ in range(env.yellow_time):
                 env.step(0)  # required yellow time
                 t += 1
-                flag = t >= config['horizon']
+                flag = (t >= config['horizon'])
                 if flag:
                     break
             if flag:

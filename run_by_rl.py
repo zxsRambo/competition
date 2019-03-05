@@ -12,9 +12,9 @@ import os
 if __name__ == "__main__":
     ## configuration for both environment and agent
     config = {
-        'data': 'data/uniform_600',
-        'roadnet': 'data/uniform_600/roadnet_uniform_600.json',
-        'flow': 'data/uniform_600/flow_uniform_600.json',
+        'data': 'data/uniform_400',
+        'roadnet': 'data/uniform_400/roadnet.json',
+        'flow': 'data/uniform_400/flow.json',
         'phase_list': [1, 2, 3, 4, 5, 6, 7, 8],
         'replay_data_path': 'data/frontend/web',
         'horizon': 3600
@@ -33,7 +33,10 @@ if __name__ == "__main__":
 
     batch_size = 32
     EPISODES = 100
-    HORIZON = 3600
+    learning_start = 300
+    update_model_freq = 300
+    update_target_model_freq = 1500
+    horizon = config['horizon']
     state_size = config['state_size']
 
     for e in range(EPISODES):
@@ -41,10 +44,11 @@ if __name__ == "__main__":
         env.reset()
         t = 0
         state = env.get_state()
-        state = np.array(list(state['start_lane_vehicle_count'].values()) + [state['current_phase']]) # a sample state representation
+        state = np.array(list(state['start_lane_vehicle_count'].values()) + [state['current_phase']]) # a sample state definition
         state = np.reshape(state, [1, state_size])
         last_action = agent.choose_action(state)
-        while t < config['horizon']:
+        last_action = phase_list[last_action]
+        while t < horizon:
             action = agent.choose_action(state)
             action = phase_list[action]
             if action == last_action:
@@ -53,7 +57,7 @@ if __name__ == "__main__":
                 for _ in range(env.yellow_time):
                     env.step(0)  # required yellow time
                     t += 1
-                    flag = t >= config['horizon']
+                    flag = (t >= horizon)
                     if flag:
                         break
                 if flag:
@@ -67,14 +71,20 @@ if __name__ == "__main__":
             next_state = np.reshape(next_state, [1, state_size])
             agent.remember(state, action, reward, next_state)
             state = next_state
-            if len(agent.memory) > batch_size:
-                agent.replay(batch_size)
+
+            total_time = t + e * horizon
+            if total_time > learning_start and total_time % update_model_freq == update_model_freq - 1:
+                agent.replay()
+            if total_time > learning_start and total_time % update_target_model_freq == update_target_model_freq -1:
+                agent.update_target_network()
+
             print("episode: {}/{}, time: {}, acton: {}, reward: {}"
                   .format(e, EPISODES, t-1, action, reward))
+
         if e % 10 == 0:
             if not os.path.exists("model"):
                 os.makedirs("model")
-            agent.save("model/trafficLight-dqn.h5")
+            agent.save("model/trafficLight-dqn-{}.h5".format(e))
 
     # log environment files
     env.log()

@@ -11,7 +11,7 @@ def main():
     sim_setting["num_step"] = 3600
     traffic_memo = [
         # "hangzhou_baochu_tiyuchang_1h_2021",
-        "uniform_600",
+        "uniform_400",
     ]
 
     for memo in traffic_memo:
@@ -20,10 +20,10 @@ def main():
 
 def evaluate_one_traffic(dic_sim_setting, memo):
 
-    roadnetFile = "data/{0}/roadnet_{0}.json".format(memo)
-    flowFile = "data/{0}/flow_{0}.json".format(memo)
-    planFile = "data/{0}/signal_plan_{0}.txt".format(memo)
-    outFile = "data/{0}/evaluation_{0}.txt".format(memo)
+    roadnetFile = "data/{0}/roadnet.json".format(memo)
+    flowFile = "data/{0}/flow.json".format(memo)
+    planFile = "data/{0}/signal_plan.txt".format(memo)
+    outFile = "data/{0}/evaluation.txt".format(memo)
 
     if check(planFile):
         df_vehicle_actual_enter_leave = test_run(dic_sim_setting, roadnetFile, flowFile, planFile)
@@ -145,56 +145,55 @@ def check(planFile):
     plan = open(planFile)
     phases = plan.readlines()
     current_phase = phases[1].strip('\n')
+    if current_phase == '0':
+        yellow_time = 1
+    else:
+        yellow_time = 0
     flag = True
     error_info = ''
-    yellow_time = 0
 
     # get first green phase and check
     last_green_phase = '*'
-    if phases[1].strip('\n') == '0':
-        flag = False
-        error_info = 'Yellow light is not allowed to appear in the beginning'
-    else:
-        for next_phase in phases[2:]:
-            next_phase = next_phase.strip('\n')
+    for next_phase in phases[2:]:
+        next_phase = next_phase.strip('\n')
 
-            # check phase itself
-            if next_phase not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '']:
-                flag = False
-                error_info = 'Phase must be in [0, 1, 2, 3, 4, 5, 6, 7, 8]'
-                break
-            if next_phase == '':
-                continue
+        # check phase itself
+        if next_phase not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '']:
+            flag = False
+            error_info = 'Phase must be in [0, 1, 2, 3, 4, 5, 6, 7, 8]'
+            break
+        if next_phase == '':
+            continue
 
-            # check changing phase
-            if next_phase != current_phase and next_phase != '0' and current_phase != '0':
-                flag = False
-                error_info = '5 seconds of yellow time must be inserted between two different phase'
-                break
+        # check changing phase
+        if next_phase != current_phase and next_phase != '0' and current_phase != '0':
+            flag = False
+            error_info = '5 seconds of yellow time must be inserted between two different phase'
+            break
 
-            # check unchangeable phase
-            if next_phase != '0' and next_phase == last_green_phase:
-                flag = False
-                error_info = 'No yellow light is allowed between the same phase'
-                break
+        # check unchangeable phase
+        if next_phase != '0' and next_phase == last_green_phase:
+            flag = False
+            error_info = 'No yellow light is allowed between the same phase'
+            break
 
-            # check yellow time
-            if next_phase != '0' and yellow_time != 0 and yellow_time != 5:
-                flag = False
-                error_info = 'Yellow time must be 5 seconds'
-                break
+        # check yellow time
+        if next_phase != '0' and yellow_time != 0 and yellow_time != 5:
+            flag = False
+            error_info = 'Yellow time must be 5 seconds'
+            break
 
-            # normal
-            if next_phase == '0':
-                yellow_time += 1
-                if current_phase != '0':
-                    last_green_phase = current_phase
-            else:
-                yellow_time = 0
-            current_phase = next_phase
+        # normal
+        if next_phase == '0':
+            yellow_time += 1
+            if current_phase != '0':
+                last_green_phase = current_phase
+        else:
+            yellow_time = 0
+        current_phase = next_phase
 
     if not flag:
-        print(flag, error_info)
+        print(error_info)
     return flag
 
 

@@ -33,6 +33,7 @@ class CityFlowEnv():
 
     def reset(self):
         self.eng.reset()
+        self.phase_log = []
 
     def step(self, next_phase):
         if self.current_phase == next_phase:
@@ -71,5 +72,4 @@ class CityFlowEnv():
         df = pd.DataFrame({'phase': self.phase_log[:self.horizon]})
         if not os.path.exists(self.config['data']):
             os.makedirs(self.config["data"])
-        memo = self.config['flow'].split('/')[1]
-        df.to_csv(os.path.join(self.config['data'], 'signal_plan_%s.txt' % memo), index=None)
+        df.to_csv(os.path.join(self.config['data'], 'signal_plan.txt'), index=None)
