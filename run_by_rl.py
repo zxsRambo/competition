@@ -46,11 +46,9 @@ if __name__ == "__main__":
         state = env.get_state()
         state = np.array(list(state['start_lane_vehicle_count'].values()) + [state['current_phase']]) # a sample state definition
         state = np.reshape(state, [1, state_size])
-        last_action = agent.choose_action(state)
-        last_action = phase_list[last_action]
+        last_action = phase_list[agent.choose_action(state)]
         while t < horizon:
-            action = agent.choose_action(state)
-            action = phase_list[action]
+            action = phase_list[agent.choose_action(state)]
             if action == last_action:
                 env.step(action)
             else:
@@ -84,7 +82,7 @@ if __name__ == "__main__":
         if e % 10 == 0:
             if not os.path.exists("model"):
                 os.makedirs("model")
-            agent.save("model/trafficLight-dqn-{}.h5".format(e))
+            agent.model.save("model/trafficLight-dqn-{}.h5".format(e))
 
     # log environment files
     env.log()
