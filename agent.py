@@ -25,7 +25,6 @@ class SOTLAgent():
 
     def choose_action(self, state):
         cur_phase = state["current_phase"]
-        print("Time: {}, Phase: {}".format(state['current_time'], cur_phase))
         if state["current_phase_time"] >= self.phi:
             num_green_vehicle = sum([state["lane_waiting_vehicle_count"][i] for i in self.phase_startLane_mapping[cur_phase]])
             num_red_vehicle = sum([state["lane_waiting_vehicle_count"][i] for i in self.lane_phase_info[self.intersection_id]["start_lane"]]) - num_green_vehicle

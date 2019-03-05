@@ -5,9 +5,9 @@ threadNum = 1                           # this .so is single thread version, thi
 saveReplay = True                       # set to True if your want to replay the traffic in GUI
 rlTrafficLight = True                   # set to True to control the signal
 changeLane = False                      # set to False if changing lane is not considered
-roadnetFile = "data/roadnet/roadnet_uniform_200.json"
-flowFile = "data/flow/flow_uniform_200.json"
-planFile = "data/plan/signal_plan.txt"
+roadnetFile = 'data/uniform_600/roadnet.json'
+flowFile = 'data/uniform_600/flow.json'
+planFile = "data/uniform_600/signal_plan.txt"
 num_step = 3600
 
 eng = engine.Engine(interval, threadNum, saveReplay, rlTrafficLight, changeLane)

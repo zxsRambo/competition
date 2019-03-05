@@ -27,27 +27,18 @@ class CityFlowEnv():
 
     def reset(self):
         self.eng.reset()
-        return self.get_state(), self.get_reward(), self.is_done()
+        return self.get_state()
 
     def step(self, action):
         if self.current_phase != action:
-            if action == 0:                            # yellow light is manually set from signal plan file
-                self.current_phase = action
-                self.current_phase_time = 1
-            else:                                      # yellow light is automatically set when changing lights
-                for i in range(self.yellow_time):
-                    self.eng.set_tl_phase(self.intersection_id, 0)
-                    self.eng.next_step()
-                    self.phase_log.append(0)
-                self.current_phase = action
-                self.current_phase_time = 1
+            self.current_phase = action
+            self.current_phase_time = 1
         else:
             self.current_phase_time += 1
 
         self.eng.set_tl_phase("intersection_1_1", self.current_phase)
         self.eng.next_step()
         self.phase_log.append(self.current_phase)
-        return self.get_state(), self.get_reward(), self.is_done()
 
     def get_state(self):
         state = {}
@@ -70,12 +61,7 @@ class CityFlowEnv():
         return reward
 
     def is_done(self):
-        # a sample condition to terminate this episode if number of waiting vehicle exceed the threshold.
-        start_lane_waiting_vehicle_count = {lane: self.eng.get_lane_waiting_vehicle_count()[lane] for lane in self.start_lane}
-        if sum(list(start_lane_waiting_vehicle_count.values())) >= 200:
-            return True
-        else:
-            return False
+        return self.eng.get_current_time() == self.horizon
 
     def log(self):
         self.eng.print_log(self.config['replay_data_path'] + "/replay_roadnet.json",

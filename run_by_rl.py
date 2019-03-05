@@ -12,8 +12,8 @@ import os
 if __name__ == "__main__":
     ## configuration for both environment and agent
     config = {
-        'roadnet': 'data/roadnet/roadnet_uniform_600.json',
-        'flow': 'data/flow/flow_uniform_600.json',
+        'roadnet': 'data/uniform_600/roadnet.json',
+        'flow': 'data/uniform_600/flow.json',
         'phase_list': [1, 2, 3, 4, 5, 6, 7, 8],
         'replay_data_path': 'data/frontend/web',
         'records_path': 'records',
@@ -41,24 +41,33 @@ if __name__ == "__main__":
     state_size = config['state_size']
 
     for e in range(EPISODES):
-        state, reward, done = env.reset()
+        state = env.reset()
         state = np.array(list(state['start_lane_vehicle_count'].values()) + [state['current_phase']]) # a sample state representation
         state = np.reshape(state, [1, state_size])
-        for time in range(HORIZON):
+        done = False
+        last_action = phase_list[agent.choose_action(state)]
+        while not done:
             action = agent.choose_action(state)
             action = phase_list[action]
-            next_state, reward, done = env.step(action)
-            reward = reward if not done else -1000
+            env.step(action)
+
+            next_state = env.get_state()
+            reward = env.get_reward()
+            done = env.is_done()
+
+            print("time: {}, phase: {}, current phase time: {}, action: {}".format(next_state['current_time'],
+                                                                                   next_state['current_phase'],
+                                                                                   next_state["current_phase_time"],
+                                                                                   action))
+
             next_state = np.array(list(next_state['start_lane_vehicle_count'].values()) + [next_state['current_phase']])
             next_state = np.reshape(next_state, [1, state_size])
             agent.remember(state, action, reward, next_state, done)
             state = next_state
-            if done:
-                break
+
             if len(agent.memory) > batch_size:
                 agent.replay(batch_size)
-            print("episode: {}/{}, time: {}, acton: {}, reward: {}"
-                  .format(e, EPISODES, time, action, reward))
+
         if e % 10 == 0:
             agent.save("model/trafficLight-dqn.h5")
 
