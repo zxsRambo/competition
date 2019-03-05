@@ -46,9 +46,14 @@ if __name__ == "__main__":
         state = np.reshape(state, [1, state_size])
         done = False
         last_action = phase_list[agent.choose_action(state)]
-        while not done:
+        time = 0
+        while not done :
             action = agent.choose_action(state)
             action = phase_list[action]
+            if last_action != action:
+                for i in range(5):
+                    env.step(0)
+                last_action = action
             env.step(action)
 
             next_state = env.get_state()
