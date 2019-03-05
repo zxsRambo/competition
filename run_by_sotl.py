@@ -10,36 +10,44 @@ from utility import parse_roadnet
 if __name__ == "__main__":
     ## configuration for both environment and agent
     config = {
+        'data': 'data/uniform_600',
         'roadnet': 'data/uniform_600/roadnet.json',
         'flow': 'data/uniform_600/flow.json',
         'phase_list': [1, 2, 3, 4, 5, 6, 7, 8],
         'replay_data_path': 'data/frontend/web',
-        'records_path': 'records',
         'horizon': 3600
 
     }
 
-    config['lane_phase_info'] = parse_roadnet(config['roadnet']) # get lane and phase information by parsing the roadnet
+    config['lane_phase_info'] = parse_roadnet(config['roadnet'])  # get lane and phase mapping by parsing the roadnet
 
     env = CityFlowEnv(config)
     agent = SOTLAgent(config)
 
     # reset initially
-    state = env.reset()
-    last_action = agent.choose_action(state)
-    done = False
-    while not done:
-        action = agent.choose_action(state)
-        if last_action != action:
-            for i in range(5):
-                env.step(0)
-            last_action = action
-        env.step(action)
-        state = env.get_state()
-        done = env.is_done()
+    t = 0
+    env.reset()
+    last_action = agent.choose_action(env.get_state())
 
-        print("time: {}, phase: {}, current phase time: {}, action: {}".format(state['current_time'], state['current_phase'],
-                                                                               state["current_phase_time"],
-                                                                               action))
+    while t < config['horizon']:
+        state = env.get_state()
+        action = agent.choose_action(state)
+        if action == last_action:
+            env.step(action)
+        else:
+            for _ in range(env.yellow_time):
+                env.step(0)  # required yellow time
+                t += 1
+                flag = t >= config['horizon']
+                if flag:
+                    break
+            if flag:
+                break
+            env.step(action)
+        last_action = action
+        t += 1
+        print("time: {}, current phase: {}, current phase time: {}".format(state['current_time'], state['current_phase'],
+                                                                           state['current_phase_time']))
+
     # log environment files
     env.log()
