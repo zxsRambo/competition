@@ -5,6 +5,7 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
 
+
 class SOTLAgent():
     ''' Agent using Fixed-time algorithm to control traffic signal
         '''
@@ -32,6 +33,7 @@ class SOTLAgent():
             if num_green_vehicle <= self.min_green_vehicle and num_red_vehicle > self.max_red_vehicle:
                 self.action = cur_phase % len(self.phase_list) + 1
         return self.action
+
 
 class DQNAgent:
     def __init__(self, config):
@@ -69,11 +71,9 @@ class DQNAgent:
 
     def replay(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
-        for state, action, reward, next_state, done in minibatch:
-            target = reward
-            if not done:
-                target = (reward + self.gamma *
-                          np.amax(self.model.predict(next_state)[0]))
+        for state, action, reward, next_state in minibatch:
+            target = (reward + self.gamma *
+                      np.amax(self.model.predict(next_state)[0]))
             target_f = self.model.predict(state)
             target_f[0][action] = target
             self.model.fit(state, target_f, epochs=1, verbose=0)

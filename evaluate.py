@@ -2,39 +2,39 @@ import engine
 import json
 import pandas as pd
 import numpy as np
+from sim_setting import sim_setting_control
+
 
 def main():
 
-    dic_sim_setting = {
-        "interval": 1.0,                          # seconds of each step
-        "threadNum": 1,                           # this .so is single thread version, this parameter is useless
-        "saveReplay": True,                       # set to True if your want to replay the traffic in GUI
-        "rlTrafficLight": True,                   # set to True to control the signal
-        "changeLane": False,                      # set to False if changing lane is not considered
-        "num_step": 3600}
-
-    list_traffic_memo = [
+    sim_setting = sim_setting_control
+    sim_setting["num_step"] = 3600
+    traffic_memo = [
         # "hangzhou_baochu_tiyuchang_1h_2021",
-        "uniform_200"
+        "uniform_600",
     ]
 
-    for memo in list_traffic_memo:
-        evaluate_one_traffic(dic_sim_setting, memo)
+    for memo in traffic_memo:
+        evaluate_one_traffic(sim_setting, memo)
+
 
 def evaluate_one_traffic(dic_sim_setting, memo):
 
-    roadnetFile = "data/roadnet/roadnet_{0}.json".format(memo)
-    flowFile = "data/flow/flow_{0}.json".format(memo)
-    planFile = "records/signal_plan_{0}.txt".format(memo)
-    outFile = "data/evaluation/evaluation_{0}.txt".format(memo)
+    roadnetFile = "data/{0}/roadnet_{0}.json".format(memo)
+    flowFile = "data/{0}/flow_{0}.json".format(memo)
+    planFile = "data/{0}/signal_plan_{0}.txt".format(memo)
+    outFile = "data/{0}/evaluation_{0}.txt".format(memo)
 
-    df_vehicle_actual_enter_leave = test_run(dic_sim_setting, roadnetFile, flowFile, planFile)
-    df_vehicle_planed_enter = get_planed_entering(flowFile, dic_sim_setting)
-    # add planed entering to actual leaving
-    tt = cal_travel_time(df_vehicle_actual_enter_leave, df_vehicle_planed_enter, outFile, dic_sim_setting)
-    print("====================== travel time ======================")
-    print("{0}: {1:.2f} s".format(memo, tt))
-    print("====================== travel time ======================")
+    if check(planFile):
+        df_vehicle_actual_enter_leave = test_run(dic_sim_setting, roadnetFile, flowFile, planFile)
+        df_vehicle_planed_enter = get_planed_entering(flowFile, dic_sim_setting)
+        # add planed entering to actual leaving
+        tt = cal_travel_time(df_vehicle_actual_enter_leave, df_vehicle_planed_enter, outFile, dic_sim_setting)
+        print("====================== travel time ======================")
+        print("{0}: {1:.2f} s".format(memo, tt))
+        print("====================== travel time ======================")
+    else:
+        print("Rejected!")
 
 
 def test_run(dic_sim_setting, roadnetFile, flowFile, planFile):
@@ -127,6 +127,7 @@ def get_planed_entering(flowFile, dic_sim_setting):
 
     return pd.DataFrame(dic_traj).transpose()
 
+
 def cal_travel_time(df_vehicle_actual_enter_leave, df_vehicle_planed_enter, outFile, dic_sim_setting):
 
     df_res = pd.concat([df_vehicle_planed_enter, df_vehicle_actual_enter_leave], axis=1, sort=False)
@@ -134,7 +135,68 @@ def cal_travel_time(df_vehicle_actual_enter_leave, df_vehicle_planed_enter, outF
 
     df_res["leave_time"].fillna(dic_sim_setting["num_step"])
     df_res["travel_time"] = df_res["leave_time"] - df_res["planed_enter_time"]
+    travel_time = df_res["travel_time"].mean()
+    with open(outFile, "w") as f:
+        f.write("Travel time is %.2f seconds." % travel_time)
+    return travel_time
 
-    return df_res["travel_time"].mean()
 
-main()
+def check(planFile):
+    plan = open(planFile)
+    phases = plan.readlines()
+    current_phase = phases[1].strip('\n')
+    flag = True
+    error_info = ''
+    yellow_time = 0
+
+    # get first green phase and check
+    last_green_phase = '*'
+    if phases[1].strip('\n') == '0':
+        flag = False
+        error_info = 'Yellow light is not allowed to appear in the beginning'
+    else:
+        for next_phase in phases[2:]:
+            next_phase = next_phase.strip('\n')
+
+            # check phase itself
+            if next_phase not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '']:
+                flag = False
+                error_info = 'Phase must be in [0, 1, 2, 3, 4, 5, 6, 7, 8]'
+                break
+            if next_phase == '':
+                continue
+
+            # check changing phase
+            if next_phase != current_phase and next_phase != '0' and current_phase != '0':
+                flag = False
+                error_info = '5 seconds of yellow time must be inserted between two different phase'
+                break
+
+            # check unchangeable phase
+            if next_phase != '0' and next_phase == last_green_phase:
+                flag = False
+                error_info = 'No yellow light is allowed between the same phase'
+                break
+
+            # check yellow time
+            if next_phase != '0' and yellow_time != 0 and yellow_time != 5:
+                flag = False
+                error_info = 'Yellow time must be 5 seconds'
+                break
+
+            # normal
+            if next_phase == '0':
+                yellow_time += 1
+                if current_phase != '0':
+                    last_green_phase = current_phase
+            else:
+                yellow_time = 0
+            current_phase = next_phase
+
+    if not flag:
+        print(flag, error_info)
+    return flag
+
+
+if __name__ == "__main__":
+    main()

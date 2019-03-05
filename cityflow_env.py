@@ -1,12 +1,19 @@
 import engine
 import pandas as pd
 import os
+from sim_setting import sim_setting_control
+
 
 class CityFlowEnv():
-    ''' Simulator Environment with CityFlow
+    '''
+    Simulator Environment with CityFlow
     '''
     def __init__(self, config):
-        self.eng = engine.Engine(1, 1, True, True, False)
+        self.eng = engine.Engine(sim_setting_control["interval"],
+                                 sim_setting_control["threadNum"],
+                                 sim_setting_control["saveReplay"],
+                                 sim_setting_control["rlTrafficLight"],
+                                 sim_setting_control["changeLane"])
         self.eng.load_roadnet(config['roadnet'])
         self.eng.load_flow(config['flow'])
         self.config = config
@@ -24,30 +31,19 @@ class CityFlowEnv():
 
         self.phase_log = []
 
-
     def reset(self):
         self.eng.reset()
-        return self.get_state(), self.get_reward(), self.is_done()
 
-    def step(self, action):
-        if self.current_phase != action:
-            if action == 0:                            # yellow light is manually set from signal plan file
-                self.current_phase = action
-                self.current_phase_time = 1
-            else:                                      # yellow light is automatically set when changing lights
-                for i in range(self.yellow_time):
-                    self.eng.set_tl_phase(self.intersection_id, 0)
-                    self.eng.next_step()
-                    self.phase_log.append(0)
-                self.current_phase = action
-                self.current_phase_time = 1
-        else:
+    def step(self, next_phase):
+        if self.current_phase == next_phase:
             self.current_phase_time += 1
+        else:
+            self.current_phase = next_phase
+            self.current_phase_time = 1
 
         self.eng.set_tl_phase("intersection_1_1", self.current_phase)
         self.eng.next_step()
         self.phase_log.append(self.current_phase)
-        return self.get_state(), self.get_reward(), self.is_done()
 
     def get_state(self):
         state = {}
@@ -69,19 +65,11 @@ class CityFlowEnv():
         reward = -1 * sum(list(lane_waiting_vehicle_count.values()))
         return reward
 
-    def is_done(self):
-        # judge whether running reaches horizon
-        if len(self.phase_log) >= self.horizon:
-            return True
-        else:
-            return False
-
     def log(self):
         self.eng.print_log(self.config['replay_data_path'] + "/replay_roadnet.json",
                            self.config['replay_data_path'] + "/replay_flow.json")
         df = pd.DataFrame({'phase': self.phase_log[:self.horizon]})
-        if not os.path.exists(self.config['records_path']):
-            os.makedirs(self.config["records_path"])
-        traffic = self.config['flow'].split('/')[-1].split(".json")[0]
-        traffic = traffic[traffic.find('_')+1:]
-        df.to_csv(os.path.join(self.config['records_path'], 'signal_plan_%s.txt' % traffic), index=None)
+        if not os.path.exists(self.config['data']):
+            os.makedirs(self.config["data"])
+        memo = self.config['flow'].split('/')[1]
+        df.to_csv(os.path.join(self.config['data'], 'signal_plan_%s.txt' % memo), index=None)

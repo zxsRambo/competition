@@ -1,5 +1,6 @@
 import json
 
+
 def parse_roadnet(roadnetFile):
     roadnet = json.load(open(roadnetFile))
     lane_phase_info_dict ={}
@@ -14,7 +15,6 @@ def parse_roadnet(roadnetFile):
                                                      "phase_startLane_mapping": {},
                                                      "phase_roadLink_mapping": {}}
         road_links = intersection["roadLinks"]
-
 
         start_lane = []
         end_lane = []

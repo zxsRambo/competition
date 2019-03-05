@@ -12,11 +12,11 @@ import os
 if __name__ == "__main__":
     ## configuration for both environment and agent
     config = {
-        'roadnet': 'data/roadnet/roadnet_uniform_600.json',
-        'flow': 'data/flow/flow_uniform_600.json',
+        'data': 'data/uniform_600',
+        'roadnet': 'data/uniform_600/roadnet_uniform_600.json',
+        'flow': 'data/uniform_600/flow_uniform_600.json',
         'phase_list': [1, 2, 3, 4, 5, 6, 7, 8],
         'replay_data_path': 'data/frontend/web',
-        'records_path': 'records',
         'horizon': 3600
     }
 
@@ -31,32 +31,49 @@ if __name__ == "__main__":
     env = CityFlowEnv(config)
     agent = DQNAgent(config)
 
-    # reset initially
-    state = env.reset()
-
-    done = False
     batch_size = 32
     EPISODES = 100
     HORIZON = 3600
     state_size = config['state_size']
 
     for e in range(EPISODES):
-        state, reward, done = env.reset()
+        # reset initially at each episode
+        env.reset()
+        t = 0
+        state = env.get_state()
         state = np.array(list(state['start_lane_vehicle_count'].values()) + [state['current_phase']]) # a sample state representation
         state = np.reshape(state, [1, state_size])
-        while not done:
+        last_action = agent.choose_action(state)
+        while t < config['horizon']:
             action = agent.choose_action(state)
             action = phase_list[action]
-            next_state, reward, done = env.step(action)
+            if action == last_action:
+                env.step(action)
+            else:
+                for _ in range(env.yellow_time):
+                    env.step(0)  # required yellow time
+                    t += 1
+                    flag = t >= config['horizon']
+                    if flag:
+                        break
+                if flag:
+                    break
+                env.step(action)
+            last_action = action
+            t += 1
+            next_state = env.get_state()
+            reward = env.get_reward()
             next_state = np.array(list(next_state['start_lane_vehicle_count'].values()) + [next_state['current_phase']])
             next_state = np.reshape(next_state, [1, state_size])
-            agent.remember(state, action, reward, next_state, done)
+            agent.remember(state, action, reward, next_state)
             state = next_state
             if len(agent.memory) > batch_size:
                 agent.replay(batch_size)
-            print("episode: {}/{}, acton: {}, reward: {}"
-                  .format(e, EPISODES, action, reward))
+            print("episode: {}/{}, time: {}, acton: {}, reward: {}"
+                  .format(e, EPISODES, t-1, action, reward))
         if e % 10 == 0:
+            if not os.path.exists("model"):
+                os.makedirs("model")
             agent.save("model/trafficLight-dqn.h5")
 
     # log environment files
