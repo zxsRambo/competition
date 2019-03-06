@@ -10,7 +10,7 @@ def main():
     sim_setting = sim_setting_control
     sim_setting["num_step"] = 3600
     traffic_memo = [
-        # "hangzhou_baochu_tiyuchang_1h_2021",
+        #"hangzhou_baochu_tiyuchang_1h_2021",
         "uniform_200",
     ]
 
@@ -34,7 +34,7 @@ def evaluate_one_traffic(dic_sim_setting, memo):
         print("{0}: {1:.2f} s".format(memo, tt))
         print("====================== travel time ======================")
     else:
-        print("Rejected!")
+        print("planFile is invalid, Rejected!")
 
 
 def test_run(dic_sim_setting, roadnetFile, flowFile, planFile):
@@ -91,10 +91,10 @@ def test_run(dic_sim_setting, roadnetFile, flowFile, planFile):
             list_non_exiting_lane_vehicles_cur += lane_vehicles[lane]
         for vec in (set(list_non_exiting_lane_vehicles_cur) - set(list_non_exiting_lane_vehicles_prev)):
             # new entering vehicles
-            dic_vehicle_enter_leave_time[vec] = {"enter_time": current_time-1, "leave_time": float("nan")}
+            dic_vehicle_enter_leave_time[vec] = {"enter_time": current_time, "leave_time": float("nan")}
         for vec in (set(list_non_exiting_lane_vehicles_prev) - set(list_non_exiting_lane_vehicles_cur)):
             # new left vehicles
-            dic_vehicle_enter_leave_time[vec]["leave_time"] = current_time-1
+            dic_vehicle_enter_leave_time[vec]["leave_time"] = current_time
 
         if current_time % 100 == 0:
             print("Time: {} / {}".format(current_time, dic_sim_setting["num_step"]))
