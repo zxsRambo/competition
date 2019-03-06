@@ -11,7 +11,7 @@ def main():
     sim_setting["num_step"] = 3600
     traffic_memo = [
         # "hangzhou_baochu_tiyuchang_1h_2021",
-        "uniform_400",
+        "uniform_200",
     ]
 
     for memo in traffic_memo:
