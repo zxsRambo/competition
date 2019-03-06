@@ -30,8 +30,8 @@ for step in range(num_step):
 
 
 phase_sequence = []
-for i in range(1,9):
-    phase_sequence.extend([i] * sim_setting_default['plan'][i] + [0] * sim_setting_default['plan'][0])
+for i in range(9):
+    phase_sequence.extend([i] * sim_setting_default['plan'][i])
 phase_sequence = (phase_sequence * math.ceil(num_step/len(phase_sequence)))[:num_step]
 
 df = pd.DataFrame({'phase': phase_sequence})
