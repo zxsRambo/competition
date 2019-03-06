@@ -12,9 +12,9 @@ import os
 if __name__ == "__main__":
     ## configuration for both environment and agent
     config = {
-        'data': 'data/uniform_400',
-        'roadnet': 'data/uniform_400/roadnet.json',
-        'flow': 'data/uniform_400/flow.json',
+        'data': 'data/uniform_200',
+        'roadnet': 'data/uniform_200/roadnet.json',
+        'flow': 'data/uniform_200/flow.json',
         'phase_list': [1, 2, 3, 4, 5, 6, 7, 8],
         'replay_data_path': 'data/frontend/web',
         'horizon': 3600
