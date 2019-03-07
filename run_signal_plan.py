@@ -1,5 +1,10 @@
 import engine
 from sim_setting import sim_setting_control
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--scenario", type=int, default=0)     
+args = parser.parse_args()
 
 num_step = 3600
 
@@ -8,9 +13,9 @@ eng = engine.Engine(sim_setting_control["interval"],
                     sim_setting_control["saveReplay"],
                     sim_setting_control["rlTrafficLight"],
                     sim_setting_control["changeLane"])
-roadnetFile = "data/uniform_200/roadnet.json"
-flowFile = "data/uniform_200/flow.json"
-planFile = "data/uniform_200/signal_plan.txt"
+roadnetFile = "data/scenario_{}/roadnet.json".format(args.scenario)
+flowFile = "data/scenario_{}/flow.json".format(args.scenario)
+planFile = "data/scenario_{0}/signal_plan_{0}.txt".format(args.scenario)
 eng.load_roadnet(roadnetFile)
 eng.load_flow(flowFile)
 plan = open(planFile)

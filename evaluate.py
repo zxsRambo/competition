@@ -3,27 +3,26 @@ import json
 import pandas as pd
 import numpy as np
 from sim_setting import sim_setting_control
+import argparse
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--scenario", type=int, default=0)     
+    args = parser.parse_args()
 
     sim_setting = sim_setting_control
     sim_setting["num_step"] = 3600
-    traffic_memo = [
-        #"hangzhou_baochu_tiyuchang_1h_2021",
-        "uniform_200",
-    ]
 
-    for memo in traffic_memo:
-        evaluate_one_traffic(sim_setting, memo)
+    evaluate_one_traffic(sim_setting, args.scenario)
 
 
-def evaluate_one_traffic(dic_sim_setting, memo):
+def evaluate_one_traffic(dic_sim_setting, scenario):
 
-    roadnetFile = "data/{0}/roadnet.json".format(memo)
-    flowFile = "data/{0}/flow.json".format(memo)
-    planFile = "data/{0}/signal_plan.txt".format(memo)
-    outFile = "data/{0}/evaluation.txt".format(memo)
+    roadnetFile = "data/scenario_{0}/roadnet.json".format(scenario)
+    flowFile = "data/scenario_{0}/flow.json".format(scenario)
+    planFile = "data/scenario_{0}/signal_plan_{0}.txt".format(scenario)
+    outFile = "data/scenario_{0}/evaluation.txt".format(scenario)
 
     if check(planFile):
         df_vehicle_actual_enter_leave = test_run(dic_sim_setting, roadnetFile, flowFile, planFile)
@@ -31,7 +30,7 @@ def evaluate_one_traffic(dic_sim_setting, memo):
         # add planed entering to actual leaving
         tt = cal_travel_time(df_vehicle_actual_enter_leave, df_vehicle_planed_enter, outFile, dic_sim_setting)
         print("====================== travel time ======================")
-        print("{0}: {1:.2f} s".format(memo, tt))
+        print("scenario_{0}: {1:.2f} s".format(scenario, tt))
         print("====================== travel time ======================")
     else:
         print("planFile is invalid, Rejected!")

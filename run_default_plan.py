@@ -3,6 +3,11 @@ from sim_setting import sim_setting_default
 import math
 import pandas as pd
 import os
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--scenario", type=int, default=0)     
+args = parser.parse_args()
 
 num_step = 3600
 
@@ -11,9 +16,9 @@ eng = engine.Engine(sim_setting_default["interval"],
                     sim_setting_default["saveReplay"],
                     sim_setting_default["rlTrafficLight"],
                     sim_setting_default["changeLane"])
-roadnetFile = "data/uniform_200/roadnet.json"
-flowFile = "data/uniform_200/flow.json"
-data_path = "data/uniform_200"
+roadnetFile = "data/scenario_{}/roadnet.json".format(args.scenario)
+flowFile = "data/scenario_{}/flow.json".format(args.scenario)
+data_path = "data/scenario_{}".format(args.scenario)
 eng.load_roadnet(roadnetFile)
 eng.load_flow(flowFile)
 
@@ -37,4 +42,4 @@ phase_sequence = (phase_sequence * math.ceil(num_step/len(phase_sequence)))[:num
 df = pd.DataFrame({'phase': phase_sequence})
 if not os.path.exists(data_path):
     os.makedirs(data_path)
-df.to_csv(os.path.join(data_path, 'signal_plan.txt'), index=None)
+df.to_csv(os.path.join(data_path, 'signal_plan_{}.txt'.format(args.scenario)), index=None)

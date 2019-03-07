@@ -6,13 +6,18 @@
 from cityflow_env import CityFlowEnv
 from agent import SOTLAgent
 from utility import parse_roadnet
+import argparse
 
 if __name__ == "__main__":
     ## configuration for both environment and agent
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--scenario", type=int, default=0)     
+    args = parser.parse_args()
     config = {
-        'data': 'data/uniform_200',
-        'roadnet': 'data/uniform_200/roadnet.json',
-        'flow': 'data/uniform_200/flow.json',
+        'scenario': args.scenario,
+        'data': 'data/scenario_{}'.format(args.scenario),
+        'roadnet': 'data/scenario_{}/roadnet.json'.format(args.scenario),
+        'flow': 'data/scenario_{}/flow.json'.format(args.scenario),
         'phase_list': [1, 2, 3, 4, 5, 6, 7, 8],
         'replay_data_path': 'data/frontend/web',
         'horizon': 3600
