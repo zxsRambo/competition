@@ -32,14 +32,3 @@ for step in range(num_step):
     eng.next_step()
 
     print("Time: {}, lane_vehicle_count: {}".format(current_time, lane_vehicle_count))
-
-
-phase_sequence = []
-for i in range(9):
-    phase_sequence.extend([i] * sim_setting_default['plan'][i])
-phase_sequence = (phase_sequence * math.ceil(num_step/len(phase_sequence)))[:num_step]
-
-df = pd.DataFrame({'phase': phase_sequence})
-if not os.path.exists(data_path):
-    os.makedirs(data_path)
-df.to_csv(os.path.join(data_path, 'signal_plan_{}.txt'.format(args.scenario)), index=None)
