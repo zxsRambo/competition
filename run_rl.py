@@ -1,48 +1,43 @@
-'''
-@time: 2019/04/27
-@description: apply a reinforcement learning algorithm to traffic signal
-'''
-
 from cityflow_env import CityFlowEnv
-from agent import DQNAgent
+from dqn_agent import DQNAgent
 from utility import parse_roadnet
 import numpy as np
 import os
-import argparse
+from utility import parse_arguments
+
+args = parse_arguments()
+roadnet = 'data/{}/roadnet.json'.format(args.scenario)
 
 if __name__ == "__main__":
     ## configuration for both environment and agent
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--scenario", type=int, default=0)     
-    args = parser.parse_args()
     config = {
         'scenario': args.scenario,
-        'data': 'data/scenario_{}'.format(args.scenario),
-        'roadnet': 'data/scenario_{}/roadnet.json'.format(args.scenario),
-        'flow': 'data/scenario_{}/flow.json'.format(args.scenario),
-        'phase_list': [1, 2, 3, 4, 5, 6, 7, 8],
-        'replay_data_path': 'data/frontend/web',
-        'horizon': 3600
-
+        'data': 'data/{}'.format(args.scenario),
+        'roadnet': roadnet,
+        'flow': 'data/{}/flow.json'.format(args.scenario),
+        #'replay_data_path': 'data/frontend/web',
+        'num_step': args.num_step,
+        'lane_phase_info': parse_roadnet(roadnet)  # get lane and phase mapping by parsing the roadnet
     }
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = ''
-
-    config['lane_phase_info'] = parse_roadnet(config['roadnet']) # get lane and phase information by parsing the roadnet
     intersection_id = list(config['lane_phase_info'].keys())[0]
     phase_list = config['lane_phase_info'][intersection_id]['phase']
     config['state_size'] = len(config['lane_phase_info'][intersection_id]['start_lane']) + 1
     config['action_size'] = len(phase_list)
 
+    # add visible gpu if necessary
+    os.environ["CUDA_VISIBLE_DEVICES"] = ''
+
     env = CityFlowEnv(config)
     agent = DQNAgent(config)
 
+    # some parameters in dqn
     batch_size = 32
     EPISODES = 100
     learning_start = 300
     update_model_freq = 300
     update_target_model_freq = 1500
-    horizon = config['horizon']
+    num_step = config['num_step']
     state_size = config['state_size']
 
     for e in range(EPISODES):
@@ -53,7 +48,7 @@ if __name__ == "__main__":
         state = np.array(list(state['start_lane_vehicle_count'].values()) + [state['current_phase']]) # a sample state definition
         state = np.reshape(state, [1, state_size])
         last_action = phase_list[agent.choose_action(state)]
-        while t < horizon:
+        while t < num_step:
             action = phase_list[agent.choose_action(state)]
             if action == last_action:
                 env.step(action)
@@ -61,7 +56,7 @@ if __name__ == "__main__":
                 for _ in range(env.yellow_time):
                     env.step(0)  # required yellow time
                     t += 1
-                    flag = (t >= horizon)
+                    flag = (t >= num_step)
                     if flag:
                         break
                 if flag:
@@ -76,7 +71,7 @@ if __name__ == "__main__":
             agent.remember(state, action, reward, next_state)
             state = next_state
 
-            total_time = t + e * horizon
+            total_time = t + e * num_step
             if total_time > learning_start and total_time % update_model_freq == update_model_freq - 1:
                 agent.replay()
             if total_time > learning_start and total_time % update_target_model_freq == update_target_model_freq -1:

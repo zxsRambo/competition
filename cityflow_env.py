@@ -17,7 +17,7 @@ class CityFlowEnv():
         self.eng.load_roadnet(config['roadnet'])
         self.eng.load_flow(config['flow'])
         self.config = config
-        self.horizon = config['horizon']
+        self.num_step = config['num_step']
         self.lane_phase_info = config['lane_phase_info'] # "intersection_1_1"
 
         self.intersection_id = list(self.lane_phase_info.keys())[0]
@@ -42,7 +42,7 @@ class CityFlowEnv():
             self.current_phase = next_phase
             self.current_phase_time = 1
 
-        self.eng.set_tl_phase("intersection_1_1", self.current_phase)
+        self.eng.set_tl_phase(self.intersection_id, self.current_phase)
         self.eng.next_step()
         self.phase_log.append(self.current_phase)
 
@@ -67,9 +67,9 @@ class CityFlowEnv():
         return reward
 
     def log(self):
-        self.eng.print_log(self.config['replay_data_path'] + "/replay_roadnet.json",
-                           self.config['replay_data_path'] + "/replay_flow.json")
-        df = pd.DataFrame({'phase': self.phase_log[:self.horizon]})
+        #self.eng.print_log(self.config['replay_data_path'] + "/replay_roadnet.json",
+        #                   self.config['replay_data_path'] + "/replay_flow.json")
+        df = pd.DataFrame({self.intersection_id: self.phase_log[:self.num_step]})
         if not os.path.exists(self.config['data']):
             os.makedirs(self.config["data"])
-        df.to_csv(os.path.join(self.config['data'], 'signal_plan_{}.txt'.format(self.config['scenario'])), index=None)
+        df.to_csv(os.path.join(self.config['data'], 'signal_plan.txt'), index=None)

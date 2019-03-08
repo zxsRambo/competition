@@ -1,5 +1,11 @@
 import json
+import argparse
 
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--scenario", type=str, default="hangzhou_bc_tyc_1h_7_8_1848")
+    parser.add_argument("--num_step", type=int, default=3600)
+    return parser.parse_args()
 
 def parse_roadnet(roadnetFile):
     roadnet = json.load(open(roadnetFile))

@@ -4,27 +4,23 @@ import pandas as pd
 import numpy as np
 from sim_setting import sim_setting_control
 import argparse
-
+from utility import parse_arguments
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--scenario", type=int, default=0)     
-    args = parser.parse_args()
-
+    args = parse_arguments()
     sim_setting = sim_setting_control
-    sim_setting["num_step"] = 3600
-
+    sim_setting["num_step"] = args.num_step
     evaluate_one_traffic(sim_setting, args.scenario)
 
 
 def evaluate_one_traffic(dic_sim_setting, scenario):
 
-    roadnetFile = "data/scenario_{0}/roadnet.json".format(scenario)
-    flowFile = "data/scenario_{0}/flow.json".format(scenario)
-    planFile = "data/scenario_{0}/signal_plan_{0}.txt".format(scenario)
-    outFile = "data/scenario_{0}/evaluation.txt".format(scenario)
+    roadnetFile = "data/{}/roadnet.json".format(scenario)
+    flowFile = "data/{}/flow.json".format(scenario)
+    planFile = "data/{}/signal_plan.txt".format(scenario)
+    outFile = "data/{}/evaluation.txt".format(scenario)
 
-    if check(planFile):
+    if check(planFile, dic_sim_setting["num_step"]):
         df_vehicle_actual_enter_leave = test_run(dic_sim_setting, roadnetFile, flowFile, planFile)
         df_vehicle_planed_enter = get_planed_entering(flowFile, dic_sim_setting)
         # add planed entering to actual leaving
@@ -140,52 +136,73 @@ def cal_travel_time(df_vehicle_actual_enter_leave, df_vehicle_planed_enter, outF
     return travel_time
 
 
-def check(planFile):
-    plan = open(planFile)
-    phases = plan.readlines()
-    current_phase = phases[1].strip('\n')
-    if current_phase == '0':
+def check(planFile, num_step):
+    flag = True
+    error_info = ''
+    try:
+        plan = pd.read_csv(planFile, sep='\t', header=0, dtype=int)
+    except:
+        flag = False
+        error_info = 'The format of signal plan is not valid and cannot be read by pd.read_csv!'
+        print(error_info)
+        return flag
+
+    intersection_id = plan.columns[0]
+    if intersection_id != 'intersection_1_1':
+        flag = False
+        error_info = 'The header intersection_id is wrong (for example: intersection_1_1)!'
+        print(error_info)
+        return flag
+
+    phases = plan.values
+    current_phase = phases[0][0]
+
+    if len(phases) < num_step:
+        flag = False
+        error_info = 'The time of signal plan is less than the default time!'
+        print(error_info)
+        return flag
+
+    if current_phase == 0:
         yellow_time = 1
     else:
         yellow_time = 0
-    flag = True
-    error_info = ''
 
     # get first green phase and check
     last_green_phase = '*'
-    for next_phase in phases[2:]:
-        next_phase = next_phase.strip('\n')
+    for next_phase in phases[1:]:
+        next_phase = next_phase[0]
 
         # check phase itself
-        if next_phase not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '']:
+        if next_phase not in [0, 1, 2, 3, 4, 5, 6, 7, 8]:
             flag = False
-            error_info = 'Phase must be in [0, 1, 2, 3, 4, 5, 6, 7, 8]'
+            error_info = 'Phase must be in [0, 1, 2, 3, 4, 5, 6, 7, 8]!'
             break
         if next_phase == '':
             continue
 
         # check changing phase
-        if next_phase != current_phase and next_phase != '0' and current_phase != '0':
+        if next_phase != current_phase and next_phase != 0 and current_phase != 0:
             flag = False
-            error_info = '5 seconds of yellow time must be inserted between two different phase'
+            error_info = '5 seconds of yellow time must be inserted between two different phase!'
             break
 
         # check unchangeable phase
-        if next_phase != '0' and next_phase == last_green_phase:
+        if next_phase != 0 and next_phase == last_green_phase:
             flag = False
-            error_info = 'No yellow light is allowed between the same phase'
+            error_info = 'No yellow light is allowed between the same phase!'
             break
 
         # check yellow time
-        if next_phase != '0' and yellow_time != 0 and yellow_time != 5:
+        if next_phase != 0 and yellow_time != 0 and yellow_time != 5:
             flag = False
-            error_info = 'Yellow time must be 5 seconds'
+            error_info = 'Yellow time must be 5 seconds!'
             break
 
         # normal
-        if next_phase == '0':
+        if next_phase == 0:
             yellow_time += 1
-            if current_phase != '0':
+            if current_phase != 0:
                 last_green_phase = current_phase
         else:
             yellow_time = 0
